@@ -1,37 +1,60 @@
-import Header from './components/header'
+import Layout from './components/Layout/Layout'
 import Vault from './components/vault'
-import Footer from './components/footer'
-import { ethers } from 'ethers'
-import abi from 'erc-20-abi'
+import raffle from './components/raffle'
+import tokenData from './components/tokenData.json'
 import { useEffect, useState } from 'react'
+import { ethers } from 'ethers'
 import { formatUnits } from '@ethersproject/units'
+import { Route, Routes } from 'react-router-dom'
 
 function App() {
 	const [balance, setBalance] = useState(0)
-	const [token, setToken] = useState(null)
+	const [token, setToken] = useState({})
+	const [contract, setContract] = useState()
+	const [signer, setSigner] = useState()
+
+	const routes = [
+		{ name: 'Vault', path: '/', element: <Vault signer={signer} contract={contract} token={token} balance={balance} /> },
+		{ name: 'Prizes', path: '/prizes', element: '' },
+		{ name: 'Winners', path: 'winners', element: '' },
+	]
 
 	useEffect(() => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum)
-		const address = '0x25f8087ead173b73d6e8b84329989a8eea16cf73' //window.ethereum.selectedAddress
-		const erc20_rw = address ? new ethers.Contract(address, abi, provider) : null
-		async function getTokenData() {
+		const signer = provider.getSigner()
+
+		async function getUserBalance() {
+			const tokenContract = new ethers.Contract(tokenData.address, tokenData.abi, signer)
+			let userAddress = await signer.getAddress()
 			setBalance(
-				await erc20_rw.balanceOf(address).then((res) => {
-					return parseFloat(formatUnits(res._hex)).toFixed(2)
+				await tokenContract.balanceOf(userAddress).then((res) => {
+					return formatUnits(res._hex, 'wei')
 				})
 			)
-			setToken(await erc20_rw.symbol())
+			setToken({
+				contract: tokenContract,
+				symbol: await tokenContract.symbol(),
+			})
 		}
-		if (address) {
-			getTokenData()
+		async function getRaffleContract() {
+			const raffleContract = signer ? new ethers.Contract(raffle.address, raffle.abi, signer) : null
+
+			setContract(raffleContract)
 		}
-	})
+		if (signer) {
+			getUserBalance()
+			getRaffleContract()
+			setSigner(signer)
+		}
+	}, [])
 	return (
-		<div className='flex flex-col h-full'>
-			<Header />
-			<Vault token={token} balance={balance} />
-			<Footer />
-		</div>
+		<Layout routes={routes}>
+			<Routes>
+				{routes.map((route) => {
+					return <Route key={route.name} path={route.path} element={route.element}></Route>
+				})}
+			</Routes>
+		</Layout>
 	)
 }
 
