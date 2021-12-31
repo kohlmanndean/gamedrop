@@ -1,5 +1,6 @@
 import Layout from './components/Layout/Layout'
 import Vault from './components/vault'
+import Prizes from './components/prizes'
 import raffle from './components/raffle'
 import tokenData from './components/tokenData.json'
 import { useEffect, useState } from 'react'
@@ -9,15 +10,21 @@ import { Route, Routes } from 'react-router-dom'
 
 function App() {
 	const [balance, setBalance] = useState(0)
+	const [winningOdds, setWinningOdds] = useState(0)
+	const [totalStaked, setTotalStaked] = useState(0)
 	const [token, setToken] = useState({})
 	const [contract, setContract] = useState()
 	const [signer, setSigner] = useState()
 
 	const routes = [
-		{ name: 'Vault', path: '/', element: <Vault signer={signer} contract={contract} token={token} balance={balance} /> },
-		{ name: 'Prizes', path: '/prizes', element: '' },
+		{ name: 'Vault', path: '/', element: <Vault signer={signer} contract={contract} token={token} balance={balance} odds={winningOdds} staked={totalStaked} /> },
+		{ name: 'Prizes', path: '/prizes', element: <Prizes /> },
 		{ name: 'Winners', path: 'winners', element: '' },
 	]
+
+	const formatNum = (number) => {
+		return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+	}
 
 	useEffect(() => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -27,20 +34,32 @@ function App() {
 			const tokenContract = new ethers.Contract(tokenData.address, tokenData.abi, signer)
 			let userAddress = await signer.getAddress()
 			setBalance(
-				await tokenContract.balanceOf(userAddress).then((res) => {
-					return formatUnits(res._hex, 'wei')
-				})
+				formatNum(
+					await tokenContract.balanceOf(userAddress).then((res) => {
+						return formatUnits(res._hex, 'wei')
+					})
+				)
 			)
+
 			setToken({
 				contract: tokenContract,
 				symbol: await tokenContract.symbol(),
 			})
 		}
+
 		async function getRaffleContract() {
 			const raffleContract = signer ? new ethers.Contract(raffle.address, raffle.abi, signer) : null
 
 			setContract(raffleContract)
+			getWinningOdds(raffleContract)
 		}
+
+		async function getWinningOdds(contract) {
+			setWinningOdds(formatNum(ethers.BigNumber.from(await contract.view_odds_of_winning(window.ethereum.selectedAddress)).toNumber()))
+
+			setTotalStaked(ethers.BigNumber.from(await contract.view_raw_balance(window.ethereum.selectedAddress)).toNumber())
+		}
+
 		if (signer) {
 			getUserBalance()
 			getRaffleContract()

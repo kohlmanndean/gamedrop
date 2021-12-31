@@ -4,13 +4,13 @@ export default function Input({ balance, token, tokenAmount }) {
 	const [value, setValue] = useState('')
 
 	const handleMaxClick = () => {
-		setValue(balance)
-		tokenAmount(balance)
+		setValue(balance.replaceAll(',', ''))
+		tokenAmount(balance.replaceAll(',', ''))
 	}
 
 	return (
-		<div className='relative rounded-full shadow-sm'>
-			<p className='text-right text-day text-xs absolute -mt-6 right-4 '>YGG available: {balance}</p>
+		<div className='relative rounded-full shadow-sm mt-4 sm:mt-0'>
+			{/* <p className='text-right text-day text-xs absolute -mt-6 right-4 '>YGG available: {balance}</p> */}
 			<div className='absolute inset-y-0 left-0 pl-3 flex items-center space-x-1 pointer-events-none'>
 				<img src='/ygg-logo.png' alt='YGG Logo' className='w-5' />
 				<span className='text-day text-sm'>YGG</span>

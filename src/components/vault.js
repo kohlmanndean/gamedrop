@@ -1,9 +1,9 @@
 import Input from './input'
 import Countdown, { zeroPad } from 'react-countdown'
 import { useState } from 'react'
-import { ethers } from 'ethers'
+// import { ethers } from 'ethers'
 
-export default function Vault({ signer, contract, token, balance }) {
+export default function Vault({ contract, token, balance, odds, staked }) {
 	const [tokenAmount, setTokenAmount] = useState(0)
 
 	const getTokenAmount = (amount) => {
@@ -14,12 +14,11 @@ export default function Vault({ signer, contract, token, balance }) {
 		await token.contract.approve(contract.address, parseFloat(tokenAmount) + 1)
 	}
 	const handleDeposit = async () => {
-		const tx = await contract.Deposit(tokenAmount)
-		tx.wait().then((res) => console.log(res))
+		await contract.Deposit(tokenAmount, { gasLimit: 210000 })
 	}
 	return (
-		<div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 border p-6 border-day bg-night-light rounded-3xl'>
-			<div className='flex items-center space-x-4'>
+		<div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8 border p-6 border-day bg-night-light rounded-3xl'>
+			<div className='flex items-center justify-center sm:justify-items-start space-x-4 w-full'>
 				<div className='relative'>
 					<img src='/ygg-logo.png' alt='YGG Logo' className='w-10' />
 					<img src='/eth-logo.png' alt='YGG Logo' className='w-5 absolute -bottom-1 -right-1 ' />
@@ -28,7 +27,7 @@ export default function Vault({ signer, contract, token, balance }) {
 			</div>
 
 			<Countdown
-				date={Date.UTC(2021, 11, 20)}
+				date={Date.UTC(2022, 0, 20)}
 				intervalDelay={0}
 				precision={3}
 				renderer={(props) => (
@@ -53,15 +52,29 @@ export default function Vault({ signer, contract, token, balance }) {
 				)}
 			/>
 
-			<Input token={token} balance={balance} tokenAmount={getTokenAmount} />
+			<div className='flex-col space-y-2'>
+				<p className='text-day flex justify-between'>
+					YGG Available: <span>{balance}</span>
+				</p>
+				<p className='text-day flex justify-between'>
+					Total YGG staked: <span>{staked}</span>
+				</p>
+				<p className='text-day flex justify-between'>
+					Odds of winning: <span>1 in {odds}</span>
+				</p>
+			</div>
 
-			<div className='flex items-center space-x-4'>
-				<button disabled={token.symbol !== 'GTT' || tokenAmount <= 0 || tokenAmount === ''} onClick={handleApprove} className='inline-block py-2 px-4 border border-day rounded-full text-sm text-center font-medium text-day w-full disabled:opacity-50'>
-					Approve
-				</button>
-				<button disabled={token.symbol !== 'GTT' || tokenAmount <= 0 || tokenAmount === ''} className='inline-block py-2 px-4 border border-day rounded-full text-sm text-center font-medium text-day w-full disabled:opacity-50'>
-					Deposit
-				</button>
+			<div className='flex flex-col space-y-6'>
+				<Input token={token} balance={balance} tokenAmount={getTokenAmount} />
+
+				<div className='flex items-center space-x-4'>
+					<button disabled={token.symbol !== 'GTT' || tokenAmount <= 0 || tokenAmount === ''} onClick={handleApprove} className='inline-block py-2 px-4 border border-day rounded-full text-sm text-center font-medium text-day w-full disabled:opacity-50'>
+						Approve
+					</button>
+					<button disabled={token.symbol !== 'GTT' || tokenAmount <= 0 || tokenAmount === ''} onClick={handleDeposit} className='inline-block py-2 px-4 border border-day rounded-full text-sm text-center font-medium text-day w-full disabled:opacity-50'>
+						Deposit
+					</button>
+				</div>
 			</div>
 		</div>
 	)

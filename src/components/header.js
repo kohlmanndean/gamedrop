@@ -73,8 +73,10 @@ function CustomLink({ route }) {
 	let resolved = useResolvedPath(route.path)
 	let match = useMatch({ path: resolved.pathname, end: true })
 	return (
-		<Disclosure.Button className={classNames(match ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'block px-3 py-2 w-full text-left rounded-md text-base font-medium')}>
-			<Link to={route.path}>{route.name}</Link>
+		<Disclosure.Button className={classNames(match ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'flex px-3 py-2 w-full rounded-md text-base font-medium')}>
+			<Link className='min-w-full text-left' to={route.path}>
+				{route.name}
+			</Link>
 		</Disclosure.Button>
 	)
 }
