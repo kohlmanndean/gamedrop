@@ -27,10 +27,10 @@ export default function Header({ routes }) {
 		)
 	}
 	return (
-		<Disclosure as='nav' className='bg-night'>
+		<Disclosure as='nav' className='bg-night absolute top-0 w-full'>
 			{({ open }) => (
 				<>
-					<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+					<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-50'>
 						<div className='flex justify-between h-16'>
 							<div className='flex'>
 								<div className='-ml-2 mr-2 flex items-center md:hidden'>
@@ -56,13 +56,14 @@ export default function Header({ routes }) {
 						</div>
 					</div>
 
-					<Disclosure.Panel className='md:hidden'>
+					<Disclosure.Panel className='md:hidden shadow-lg rounded-b-lg h-full z-50'>
 						<div className='px-2 pt-2 pb-3 space-y-1 sm:px-3'>
 							{routes.map((route) => (
 								<CustomLink route={route} key={route.name} />
 							))}
 						</div>
 					</Disclosure.Panel>
+					{/* {open ? <div className='relative h-screen w-screen bg-black opacity-50 z-10'></div> : null} */}
 				</>
 			)}
 		</Disclosure>
@@ -73,8 +74,8 @@ function CustomLink({ route }) {
 	let resolved = useResolvedPath(route.path)
 	let match = useMatch({ path: resolved.pathname, end: true })
 	return (
-		<Disclosure.Button className={classNames(match ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'flex px-3 py-2 w-full rounded-md text-base font-medium')}>
-			<Link className='min-w-full text-left' to={route.path}>
+		<Disclosure.Button className={classNames(match ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'flex w-full rounded-md text-base font-medium')}>
+			<Link className='min-w-full text-left px-3 py-2' to={route.path}>
 				{route.name}
 			</Link>
 		</Disclosure.Button>

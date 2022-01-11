@@ -17,7 +17,7 @@ export default function Vault({ contract, token, balance, odds, staked }) {
 		await contract.Deposit(tokenAmount, { gasLimit: 210000 })
 	}
 	return (
-		<div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8 border p-6 border-day bg-night-light rounded-3xl'>
+		<div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8 p-6 border border-day bg-night-light rounded-3xl'>
 			<div className='flex items-center justify-center sm:justify-items-start space-x-4 w-full'>
 				<div className='relative'>
 					<img src='/ygg-logo.png' alt='YGG Logo' className='w-10' />

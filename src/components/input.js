@@ -9,7 +9,7 @@ export default function Input({ balance, token, tokenAmount }) {
 	}
 
 	return (
-		<div className='relative rounded-full shadow-sm mt-4 sm:mt-0'>
+		<div className='relative rounded-full shadow-sm'>
 			{/* <p className='text-right text-day text-xs absolute -mt-6 right-4 '>YGG available: {balance}</p> */}
 			<div className='absolute inset-y-0 left-0 pl-3 flex items-center space-x-1 pointer-events-none'>
 				<img src='/ygg-logo.png' alt='YGG Logo' className='w-5' />

@@ -1,6 +1,7 @@
 import Layout from './components/Layout/Layout'
 import Vault from './components/vault'
 import Prizes from './components/prizes'
+import Winners from './components/winners'
 import raffle from './components/raffle'
 import tokenData from './components/tokenData.json'
 import { useEffect, useState } from 'react'
@@ -19,7 +20,7 @@ function App() {
 	const routes = [
 		{ name: 'Vault', path: '/', element: <Vault signer={signer} contract={contract} token={token} balance={balance} odds={winningOdds} staked={totalStaked} /> },
 		{ name: 'Prizes', path: '/prizes', element: <Prizes /> },
-		{ name: 'Winners', path: 'winners', element: '' },
+		{ name: 'Winners', path: 'winners', element: <Winners /> },
 	]
 
 	const formatNum = (number) => {
