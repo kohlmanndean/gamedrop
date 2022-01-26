@@ -1,22 +1,9 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
-import contractData from './raffle.json'
 import NFTContractData from './CoolNFTs.json'
 import moment from 'moment'
 
-export default function Winners() {
-	const [winners, setWinners] = useState([])
-
-	useEffect(() => {
-		const provider = new ethers.providers.Web3Provider(window.ethereum)
-		const signer = provider.getSigner()
-		const raffleContract = new ethers.Contract(contractData.address, contractData.abi, signer)
-		const getWinners = async () => {
-			setWinners(await raffleContract.queryFilter('raffleCompleted'))
-		}
-		getWinners()
-	}, [])
-
+export default function Winners({ completedRaffles }) {
 	return (
 		<div className='grid grid-cols-1 gap-x-8 gap-y-8 p-6 border border-day bg-night-light rounded-3xl'>
 			<div className='flex items-center justify-center sm:justify-start space-x-4 w-full'>
@@ -52,8 +39,8 @@ export default function Winners() {
 									</tr>
 								</thead>
 								<tbody className='divide-y divide-day'>
-									{winners.map((winner) => (
-										<TableRow key={winner.address} winner={winner} />
+									{completedRaffles.map((completedRaffle) => (
+										<TableRow key={completedRaffle.blockHash} completedRaffle={completedRaffle} />
 									))}
 								</tbody>
 							</table>
@@ -65,9 +52,9 @@ export default function Winners() {
 	)
 }
 
-function TableRow({ winner }) {
+function TableRow({ completedRaffle }) {
 	const [NFT, setNFT] = useState({})
-	const address = winner.args['prize']['nft_contract']
+	const address = completedRaffle.args['prize']['nft_contract']
 
 	useEffect(() => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -93,13 +80,13 @@ function TableRow({ winner }) {
 		},
 	}
 	return (
-		<tr key={winner.address}>
+		<tr>
 			<td className='px-6 py-4 whitespace-nowrap'>
-				<div className='text-sm font-medium text-day'>{moment.unix(winner.args['time'].toNumber()).format('YYYY-MM-DD')}</div>
+				<div className='text-sm font-medium text-day'>{moment.unix(completedRaffle.args['time'].toNumber()).format('YYYY-MM-DD')}</div>
 			</td>
 			<td className='px-6 py-4 whitespace-nowrap'>
-				<a href={etherscan.addressURL(winner.args['winner'])} target='_blank' rel='noreferrer' className='text-day text-sm font-medium'>
-					{`${winner.args['winner'].slice(0, 6)}...${winner.args['winner'].slice(winner.args['winner'].length - 3)} `}
+				<a href={etherscan.addressURL(completedRaffle.args['winner'])} target='_blank' rel='noreferrer' className='text-day text-sm font-medium'>
+					{`${completedRaffle.args['winner'].slice(0, 6)}...${completedRaffle.args['winner'].slice(completedRaffle.args['winner'].length - 3)} `}
 					<span>
 						<svg xmlns='http://www.w3.org/2000/svg' className='inline-block h-4 w-4 mb-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
 							<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14' />
@@ -108,8 +95,8 @@ function TableRow({ winner }) {
 				</a>
 			</td>
 			<td className='px-6 py-4 whitespace-nowrap'>
-				<a href={etherscan.tokenURL({ address: winner.args['prize']['nft_contract'], id: winner.args['prize'].token_id })} target='_blank' rel='noreferrer' className='text-day text-sm font-medium'>
-					{`${NFT.name} #${winner.args['prize'].token_id} `}
+				<a href={etherscan.tokenURL({ address: completedRaffle.args['prize']['nft_contract'], id: completedRaffle.args['prize'].token_id })} target='_blank' rel='noreferrer' className='text-day text-sm font-medium'>
+					{`${NFT.name} #${completedRaffle.args['prize'].token_id} `}
 					<span>
 						<svg xmlns='http://www.w3.org/2000/svg' className='inline-block h-4 w-4 mb-1' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
 							<path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14' />

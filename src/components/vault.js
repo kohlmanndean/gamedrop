@@ -1,21 +1,32 @@
 import Input from './input'
 import Countdown, { zeroPad } from 'react-countdown'
 import { useState } from 'react'
-// import { ethers } from 'ethers'
+import NumberFormat from 'react-number-format'
+import moment from 'moment'
 
-export default function Vault({ contract, token, balance, odds, staked }) {
+export default function Vault({ metamask, raffleContract, token, balance, odds, totalStaked, completedRaffles }) {
 	const [tokenAmount, setTokenAmount] = useState(0)
-
 	const getTokenAmount = (amount) => {
 		setTokenAmount(amount)
 	}
-
 	const handleApprove = async () => {
-		await token.contract.approve(contract.address, parseFloat(tokenAmount) + 1)
+		await token.contract.approve(raffleContract.address, parseFloat(tokenAmount) + 1)
 	}
 	const handleDeposit = async () => {
-		await contract.Deposit(tokenAmount, { gasLimit: 210000 })
+		await raffleContract.Deposit(tokenAmount, { gasLimit: 210000 })
 	}
+	const lastRaffleTime = +moment
+		.unix(
+			completedRaffles
+				.map((raffle) => {
+					return raffle.args['time']
+				})
+				.reduce((a, b) => {
+					return b > a ? b : a
+				}, 0)
+		)
+		.add(7, 'days')
+
 	return (
 		<div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8 p-6 border border-day bg-night-light rounded-3xl'>
 			<div className='flex items-center justify-center sm:justify-items-start space-x-4 w-full'>
@@ -27,7 +38,8 @@ export default function Vault({ contract, token, balance, odds, staked }) {
 			</div>
 
 			<Countdown
-				date={Date.UTC(2022, 0, 20)}
+				date={lastRaffleTime}
+				key={lastRaffleTime}
 				intervalDelay={0}
 				precision={3}
 				renderer={(props) => (
@@ -52,15 +64,18 @@ export default function Vault({ contract, token, balance, odds, staked }) {
 				)}
 			/>
 
-			<div className='flex-col space-y-2'>
+			<div className={`flex-col space-y-2`}>
 				<p className='text-day flex justify-between'>
-					YGG Available: <span>{balance}</span>
+					YGG Available: <NumberFormat value={balance} displayType={'text'} thousandSeparator={true} />
 				</p>
 				<p className='text-day flex justify-between'>
-					Total YGG staked: <span>{staked}</span>
+					Total YGG staked: <NumberFormat value={totalStaked} displayType={'text'} thousandSeparator={true} />
 				</p>
 				<p className='text-day flex justify-between'>
-					Odds of winning: <span>1 in {odds}</span>
+					Odds of winning:{' '}
+					<span>
+						{`${odds > 0 ? '1 in' : ''}`} <NumberFormat value={odds} displayType={'text'} thousandSeparator={true} />
+					</span>
 				</p>
 			</div>
 

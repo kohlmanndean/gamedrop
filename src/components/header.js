@@ -1,28 +1,24 @@
 import { Disclosure } from '@headlessui/react'
 import { MenuIcon, XIcon } from '@heroicons/react/outline'
-import { useMetaMask } from 'metamask-react'
 import { Link, useMatch, useResolvedPath } from 'react-router-dom'
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ')
 }
 
-export default function Header({ routes }) {
+export default function Header({ routes, metamask }) {
 	let connectButton
-	const { status, account, connect } = useMetaMask()
-	if (status !== 'connected') {
+
+	if (metamask.status !== 'connected') {
 		connectButton = (
-			<button onClick={connect} className='inline-block py-2 px-4 border border-day rounded-full text-base font-medium text-day hover:bg-opacity-75'>
+			<button onClick={metamask.connect} className='inline-block py-2 px-4 border border-day rounded-full text-base font-medium text-day hover:bg-opacity-75'>
 				Connect Wallet
 			</button>
 		)
 	} else {
 		connectButton = (
-			<div className='flex items-center space-x-2 py-2 px-4 border border-green-400 rounded-full text-base font-medium text-green-400 hover:bg-opacity-75'>
-				<div className='w-2 h-2 rounded-full bg-green-400 shadow-xl'></div>
-				<p>
-					{account.slice(0, 6)}...{account.slice(account.length - 3)}
-				</p>
+			<div className='flex items-center py-2 px-4 border border-green-400 rounded-full text-base font-medium text-green-400 hover:bg-opacity-75'>
+				{metamask.account.slice(0, 6)}...{metamask.account.slice(metamask.account.length - 4)}
 			</div>
 		)
 	}
