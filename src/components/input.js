@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function Input({ balance, token, tokenAmount }) {
+export default function Input({ balance, tokenAmount }) {
 	const [value, setValue] = useState('')
 
 	const handleMaxClick = () => {
@@ -26,11 +26,10 @@ export default function Input({ balance, token, tokenAmount }) {
 				}}
 				className='bg-transparent  text-day placeholder-day placeholder-opacity-50 focus:ring-day focus:border-day block w-full pl-20 pr-12 sm:text-sm border-day rounded-full'
 				placeholder='0.00'
-				disabled={token.symbol !== 'GTT'}
 				aria-describedby='price-currency'
 			/>
 			<div className='absolute inset-y-0 right-0 pr-3 flex items-center'>
-				<button onClick={handleMaxClick} disabled={token.symbol !== 'GTT'} className='text-day sm:text-sm'>
+				<button onClick={handleMaxClick} className='text-day sm:text-sm'>
 					max
 				</button>
 			</div>

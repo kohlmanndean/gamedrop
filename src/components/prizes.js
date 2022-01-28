@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import NFTContractData from './CoolNFTs.json'
-import contractData from './raffle.json'
+import raffle from './raffle.json'
 
-export default function Prizes() {
+export default function Prizes({ provider }) {
 	const [NFTs, setNFTs] = useState([])
 
 	useEffect(() => {
-		const provider = new ethers.providers.Web3Provider(window.ethereum)
-		const signer = provider.getSigner()
-		// const NFTContract = new ethers.Contract(NFTContractData.address, NFTContractData.abi, signer)
-		const raffleContract = new ethers.Contract(contractData.address, contractData.abi, signer)
+		const raffleContract = new ethers.Contract(raffle.address, raffle.abi, provider)
+		// const NFTContract = new ethers.Contract(NFTContractData.address, NFTContractData.abi, provider)
 
 		const getNFTs = async () => {
 			const nfts = await raffleContract.queryFilter('NFTVaulted')
@@ -23,7 +21,7 @@ export default function Prizes() {
 		}
 
 		getNFTs()
-	}, [])
+	}, [provider])
 
 	return (
 		<div className='p-6 border border-day bg-night-light rounded-3xl grid grid-cols-1 gap-8'>
@@ -36,22 +34,19 @@ export default function Prizes() {
 			</div>
 			<ul className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 '>
 				{NFTs?.map((nft) => (
-					<PrizeItem key={nft.blockHash} nft={nft} />
+					<PrizeItem key={nft.blockHash} nft={nft} provider={provider} />
 				))}
 			</ul>
 		</div>
 	)
 }
 
-function PrizeItem({ nft }) {
+function PrizeItem({ nft, provider }) {
 	const [NFT, setNFT] = useState({})
 
 	useEffect(() => {
-		const provider = new ethers.providers.Web3Provider(window.ethereum)
-		const signer = provider.getSigner()
-
 		const getNFT = async () => {
-			const contract = new ethers.Contract(nft.args['nft_contract'], NFTContractData.abi, signer)
+			const contract = new ethers.Contract(nft.args['nft_contract'], NFTContractData.abi, provider)
 			setNFT({
 				contract: contract,
 				name: await contract.name(),
@@ -60,7 +55,7 @@ function PrizeItem({ nft }) {
 			})
 		}
 		getNFT()
-	}, [nft])
+	}, [nft, provider])
 
 	const etherscan = {
 		url: 'https://kovan.etherscan.io',

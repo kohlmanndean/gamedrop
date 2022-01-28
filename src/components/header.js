@@ -1,26 +1,25 @@
 import { Disclosure } from '@headlessui/react'
 import { MenuIcon, XIcon } from '@heroicons/react/outline'
+import { shortenAddress, useEthers } from '@usedapp/core'
 import { Link, useMatch, useResolvedPath } from 'react-router-dom'
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ')
 }
 
-export default function Header({ routes, metamask }) {
+export default function Header({ routes, account }) {
+	const { activateBrowserWallet } = useEthers()
+
 	let connectButton
 
-	if (metamask.status !== 'connected') {
+	if (!account) {
 		connectButton = (
-			<button onClick={metamask.connect} className='inline-block py-2 px-4 border border-day rounded-full text-base font-medium text-day hover:bg-opacity-75'>
+			<button onClick={activateBrowserWallet} className='inline-block py-2 px-4 border border-day rounded-full text-base font-medium text-day hover:bg-opacity-75'>
 				Connect Wallet
 			</button>
 		)
 	} else {
-		connectButton = (
-			<div className='flex items-center py-2 px-4 border border-green-400 rounded-full text-base font-medium text-green-400 hover:bg-opacity-75'>
-				{metamask.account.slice(0, 6)}...{metamask.account.slice(metamask.account.length - 4)}
-			</div>
-		)
+		connectButton = <div className='flex items-center py-2 px-4 border border-green-400 rounded-full text-base font-medium text-green-400 hover:bg-opacity-75'>{shortenAddress(account)}</div>
 	}
 	return (
 		<Disclosure as='nav' className='bg-night absolute top-0 w-full'>
