@@ -11,17 +11,16 @@ export default function Winners() {
 	const [raffles, setRaffles] = useState([])
 	const { library } = useEthers()
 
-	const raffleContract = new ethers.Contract(raffle.address, raffleABI, library)
-
 	useEffect(() => {
-		getRaffles()
-	})
-
-	const getRaffles = async () => {
-		if (library) {
+		const raffleContract = new ethers.Contract(raffle.address, raffleABI, library)
+		const getRaffles = async () => {
 			setRaffles(await raffleContract.queryFilter('raffleCompleted'))
 		}
-	}
+		if (library) {
+			getRaffles()
+		}
+	}, [library])
+
 	return (
 		<div className='grid grid-cols-1 gap-x-8 gap-y-8 p-6 border border-day bg-night-light rounded-3xl'>
 			<div className='flex items-center justify-center sm:justify-start space-x-4 w-full'>
