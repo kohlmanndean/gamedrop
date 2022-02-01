@@ -4,11 +4,11 @@ module.exports = {
 	theme: {
 		extend: {
 			colors: {
+				day: '#56AEFF',
 				night: {
 					DEFAULT: '#030023',
 					light: '#04002E',
 				},
-				day: '#56AEFF',
 			},
 		},
 	},
