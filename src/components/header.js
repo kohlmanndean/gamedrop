@@ -70,7 +70,7 @@ function ConnectButton() {
 	const { activateBrowserWallet, deactivate, account } = useEthers()
 
 	return (
-		<button onClick={account ? deactivate : activateBrowserWallet} className={`inline-block py-2 px-4 border border-${account ? 'green-400' : 'day'} rounded-full text-base font-medium text-${account ? 'green-400' : 'day'} hover:`}>
+		<button onClick={account ? deactivate : activateBrowserWallet} className={`inline-block py-2 px-4 border ${account ? 'border-green-400' : 'border-day'} rounded-full text-base font-medium ${account ? 'text-green-400' : 'text-day'}`}>
 			{account ? shortenAddress(account) : 'Connect Wallet'}
 		</button>
 	)
