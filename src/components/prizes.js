@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import NFTContractData from './CoolNFTs.json'
 import raffle from './raffle.json'
+import { OpenSeaPort, Network } from 'opensea-js'
+import { useEthers } from '@usedapp/core'
 
-export default function Prizes({ provider }) {
+export default function Prizes() {
+	const { library } = useEthers()
 	const [NFTs, setNFTs] = useState([])
 
 	useEffect(() => {
-		const raffleContract = new ethers.Contract(raffle.address, raffle.abi, provider)
+		const raffleContract = new ethers.Contract(raffle.address, raffle.abi, library)
 		// const NFTContract = new ethers.Contract(NFTContractData.address, NFTContractData.abi, provider)
 
 		const getNFTs = async () => {
@@ -20,8 +23,10 @@ export default function Prizes({ provider }) {
 			)
 		}
 
-		getNFTs()
-	}, [provider])
+		if (library) {
+			getNFTs()
+		}
+	}, [library])
 
 	return (
 		<div className='p-6 border border-day bg-night-light rounded-3xl grid grid-cols-1 gap-8'>
@@ -34,7 +39,7 @@ export default function Prizes({ provider }) {
 			</div>
 			<ul className='grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 '>
 				{NFTs?.map((nft) => (
-					<PrizeItem key={nft.blockHash} nft={nft} provider={provider} />
+					<PrizeItem key={nft.blockHash} nft={nft} provider={library} />
 				))}
 			</ul>
 		</div>

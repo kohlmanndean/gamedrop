@@ -6,16 +6,13 @@ import Vault from './components/vault'
 import Prizes from './components/prizes'
 import Winners from './components/winners'
 import { Route, Routes } from 'react-router-dom'
-import { useEthers } from '@usedapp/core'
 
 export default function App() {
-	const { account } = useEthers()
-
 	const routes = [
 		{
 			name: 'Vault',
 			path: '/',
-			element: <Vault account={account} />,
+			element: <Vault />,
 		},
 		{
 			name: 'Prizes',
@@ -32,7 +29,7 @@ export default function App() {
 	return (
 		<div className='flex flex-col h-full overflow-hidden'>
 			<Router>
-				<Header className='z-50' routes={routes} account={account} />
+				<Header className='z-50' routes={routes} />
 				<main className='flex justify-center items-center h-full p-6'>
 					<Routes>
 						{routes.map((route) => {

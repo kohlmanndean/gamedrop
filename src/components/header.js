@@ -7,20 +7,7 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ')
 }
 
-export default function Header({ routes, account }) {
-	const { activateBrowserWallet } = useEthers()
-
-	let connectButton
-
-	if (!account) {
-		connectButton = (
-			<button onClick={activateBrowserWallet} className='inline-block py-2 px-4 border border-day rounded-full text-base font-medium text-day hover:bg-opacity-75'>
-				Connect Wallet
-			</button>
-		)
-	} else {
-		connectButton = <div className='flex items-center py-2 px-4 border border-green-400 rounded-full text-base font-medium text-green-400 hover:bg-opacity-75'>{shortenAddress(account)}</div>
-	}
+export default function Header({ routes }) {
 	return (
 		<Disclosure as='nav' className='bg-night absolute top-0 w-full'>
 			{({ open }) => (
@@ -46,7 +33,9 @@ export default function Header({ routes, account }) {
 								</div>
 							</div>
 							<div className='flex items-center'>
-								<div className='flex-shrink-0'>{connectButton}</div>
+								<div className='flex-shrink-0'>
+									<ConnectButton />
+								</div>
 							</div>
 						</div>
 					</div>
@@ -74,5 +63,15 @@ function CustomLink({ route }) {
 				{route.name}
 			</Link>
 		</Disclosure.Button>
+	)
+}
+
+function ConnectButton() {
+	const { activateBrowserWallet, deactivate, account } = useEthers()
+
+	return (
+		<button onClick={account ? deactivate : activateBrowserWallet} className={`inline-block py-2 px-4 border border-${account ? 'green-400' : 'day'} rounded-full text-base font-medium text-${account ? 'green-400' : 'day'} hover:`}>
+			{account ? shortenAddress(account) : 'Connect Wallet'}
+		</button>
 	)
 }

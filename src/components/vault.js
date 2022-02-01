@@ -7,46 +7,55 @@ import Countdown, { zeroPad } from 'react-countdown'
 import NumberFormat from 'react-number-format'
 import moment from 'moment'
 import Input from './input'
-import { useContractCalls, useTokenBalance } from '@usedapp/core'
+import { useContractCalls, useContractFunction, useEthers } from '@usedapp/core'
 
 const raffleABI = new ethers.utils.Interface(raffle.abi)
 const tokenABI = new ethers.utils.Interface(token.abi)
 
-export default function Vault({ account }) {
-	const [tokenBalance, totalStaked, odds] = useContractCalls([
-		{ abi: tokenABI, address: token.address, method: 'balanceOf', args: [account || raffle.address] },
-		{ abi: raffleABI, address: raffle.address, method: 'view_raw_balance', args: [account || raffle.address] },
-		{ abi: raffleABI, address: raffle.address, method: 'view_odds_of_winning', args: [account || raffle.address] },
-	])
-
+export default function Vault() {
+	const { account, library } = useEthers()
 	const [tokenAmount, setTokenAmount] = useState(0)
 	const [countdownTargetDate, setCountdownTargetDate] = useState(1)
 
+	const raffleContract = new ethers.Contract(raffle.address, raffleABI, library)
+
 	useEffect(() => {
-		const completedRaffles = []
-		setCountdownTargetDate(
-			+moment
-				.unix(
-					completedRaffles
-						.map((raffle) => {
-							return raffle.args['time']
-						})
-						.reduce((a, b) => {
-							return b > a ? b : a
-						}, 0)
-				)
-				.add(20, 'days')
-		)
-	}, [])
+		getCountdownTargetDate()
+	})
+
+	const approve = useContractFunction(new ethers.Contract(token.address, tokenABI, new ethers.providers.Web3Provider(window.ethereum).getSigner()), 'approve', { transactionName: 'Approve' })
+
+	const deposit = useContractFunction(new ethers.Contract(raffle.address, raffleABI, new ethers.providers.Web3Provider(window.ethereum).getSigner()), 'Deposit', { transactionName: 'Deposit' })
+
+	const handleApprove = () => {
+		approve.send(raffle.address, parseFloat(tokenAmount) + 1)
+	}
+	const handleDeposit = () => {
+		deposit.send(parseFloat(tokenAmount), { gasLimit: 999999 })
+	}
+
+	const getCountdownTargetDate = async () => {
+		if (library) {
+			setCountdownTargetDate(
+				await raffleContract.queryFilter('raffleCompleted').then((raffles) => {
+					return +moment
+						.unix(
+							raffles
+								.map((raffle) => {
+									return raffle.args['time']
+								})
+								.reduce((a, b) => {
+									return b > a ? b : a
+								}, 0)
+						)
+						.add(20, 'days')
+				})
+			)
+		}
+	}
 
 	const getTokenAmount = (amount) => {
 		setTokenAmount(amount)
-	}
-	const handleApprove = async () => {
-		// await tokenContract.approve(raffleContract.address, parseFloat(tokenAmount) + 1)
-	}
-	const handleDeposit = async () => {
-		// await raffleContract.Deposit(tokenAmount, { gasLimit: 210000 })
 	}
 
 	return (
@@ -86,10 +95,10 @@ export default function Vault({ account }) {
 				)}
 			/>
 
-			<UserStats userAddress={account} balance={tokenBalance ? formatUnits(tokenBalance[0], 0) : 0} totalStaked={totalStaked ? formatUnits(totalStaked[0], 0) : 0} odds={odds ? formatUnits(odds[0], 0) : 0} />
+			{account && <UserStats account={account} />}
 
 			<div className='flex flex-col space-y-6'>
-				<Input balance={tokenBalance} tokenAmount={getTokenAmount} />
+				<Input balance={0} tokenAmount={getTokenAmount} />
 
 				<div className='flex items-center space-x-4'>
 					<button disabled={tokenAmount <= 0 || tokenAmount === ''} onClick={handleApprove} className='inline-block py-2 px-4 border border-day rounded-full text-sm text-center font-medium text-day w-full disabled:opacity-50'>
@@ -104,19 +113,25 @@ export default function Vault({ account }) {
 	)
 }
 
-function UserStats({ userAddress, balance, totalStaked, odds }) {
+function UserStats({ account }) {
+	const [tokenBalance, totalStaked, odds] = useContractCalls([
+		{ abi: tokenABI, address: token.address, method: 'balanceOf', args: [account] },
+		{ abi: raffleABI, address: raffle.address, method: 'view_raw_balance', args: [account] },
+		{ abi: raffleABI, address: raffle.address, method: 'view_odds_of_winning', args: [account] },
+	])
+
 	return (
 		<div className={`flex-col space-y-2`}>
 			<p className='text-day flex justify-between'>
-				YGG Available: <NumberFormat value={balance} displayType={'text'} thousandSeparator={true} />
+				YGG Available: <NumberFormat value={(tokenBalance && formatUnits(tokenBalance[0], 0)) || 0} displayType={'text'} thousandSeparator={true} />
 			</p>
 			<p className='text-day flex justify-between'>
-				Total YGG staked: <NumberFormat value={totalStaked} displayType={'text'} thousandSeparator={true} />
+				Total YGG staked: <NumberFormat value={(totalStaked && formatUnits(totalStaked[0], 0)) || 0} displayType={'text'} thousandSeparator={true} />
 			</p>
 			<p className='text-day flex justify-between'>
 				Odds of winning:
 				<span>
-					{`${odds >= 1 ? '1 in' : ''}`} <NumberFormat value={odds} displayType={'text'} thousandSeparator={true} />
+					{`${odds >= 1 ? '1 in' : ''}`} <NumberFormat value={(odds && formatUnits(odds[0], 0)) || 0} displayType={'text'} thousandSeparator={true} />
 				</span>
 			</p>
 		</div>
