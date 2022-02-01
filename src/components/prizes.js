@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import NFTContractData from './CoolNFTs.json'
 import raffle from './raffle.json'
-import { OpenSeaPort, Network } from 'opensea-js'
+// import { OpenSeaPort, Network } from 'opensea-js'
 import { useEthers } from '@usedapp/core'
 
 export default function Prizes() {
