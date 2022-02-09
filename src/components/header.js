@@ -68,10 +68,20 @@ function CustomLink({ route }) {
 
 function ConnectButton() {
 	const { activateBrowserWallet, deactivate, account } = useEthers()
-
 	return (
-		<button onClick={account ? deactivate : activateBrowserWallet} className={`inline-block py-2 px-4 border ${account ? 'border-green-400' : 'border-day'} rounded-full text-base font-medium ${account ? 'text-green-400' : 'text-day'}`}>
-			{account ? shortenAddress(account) : 'Connect Wallet'}
-		</button>
+		<div className='flex items-center'>
+			{account && <div className='-mr-1.5 border border-r-0 py-1 px-1.5 pr-2.5 rounded-l-full border-green-400 text-green-400 text-sm'>{shortenAddress(account)}</div>}
+			<button
+				onClick={async () => {
+					if (account) {
+						deactivate()
+					} else {
+						activateBrowserWallet()
+					}
+				}}
+				className={`inline-block py-2 px-6 border border-day rounded-full text-base font-medium text-day`}>
+				{account ? 'Disconnect' : 'Connect'}
+			</button>
+		</div>
 	)
 }

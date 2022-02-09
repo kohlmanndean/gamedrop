@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 import raffle from './raffle.json'
-import token from './tokenData.json'
+import token from './YGGToken.json'
 import { formatUnits } from 'ethers/lib/utils'
 import Countdown, { zeroPad } from 'react-countdown'
 import NumberFormat from 'react-number-format'
 import moment from 'moment'
-import Input from './input'
-import { useContractCalls, useContractFunction, useEthers } from '@usedapp/core'
+import { useCalls, useContractFunction, useEthers, useTokenBalance } from '@usedapp/core'
 
 const raffleABI = new ethers.utils.Interface(raffle.abi)
 const tokenABI = new ethers.utils.Interface(token.abi)
@@ -18,6 +17,8 @@ export default function Vault() {
 	const [countdownTargetDate, setCountdownTargetDate] = useState(1)
 
 	const raffleContract = new ethers.Contract(raffle.address, raffleABI, library)
+
+	const balance = useTokenBalance() || 0
 
 	useEffect(() => {
 		getCountdownTargetDate()
@@ -48,7 +49,7 @@ export default function Vault() {
 									return b > a ? b : a
 								}, 0)
 						)
-						.add(20, 'days')
+						.add(7, 'days')
 				})
 			)
 		}
@@ -95,10 +96,8 @@ export default function Vault() {
 				)}
 			/>
 
-			{account && <UserStats account={account} />}
-
 			<div className='flex flex-col space-y-6'>
-				<Input balance={0} tokenAmount={getTokenAmount} />
+				<Input balance={balance} tokenAmount={getTokenAmount} />
 
 				<div className='flex items-center space-x-4'>
 					<button disabled={tokenAmount <= 0 || tokenAmount === ''} onClick={handleApprove} className='inline-block py-2 px-4 border border-day rounded-full text-sm text-center font-medium text-day w-full disabled:opacity-50'>
@@ -109,29 +108,80 @@ export default function Vault() {
 					</button>
 				</div>
 			</div>
+			<UserStats account={account} raffleContract={raffleContract} />
 		</div>
 	)
 }
 
-function UserStats({ account }) {
-	const [tokenBalance, totalStaked, odds] = useContractCalls([
-		{ abi: tokenABI, address: token.address, method: 'balanceOf', args: [account] },
-		{ abi: raffleABI, address: raffle.address, method: 'view_raw_balance', args: [account] },
-		{ abi: raffleABI, address: raffle.address, method: 'view_odds_of_winning', args: [account] },
-	])
+function Input({ balance, tokenAmount }) {
+	const [value, setValue] = useState('')
+
+	const handleMaxClick = () => {
+		setValue(balance.replaceAll(',', ''))
+		tokenAmount(balance.replaceAll(',', ''))
+	}
+
+	return (
+		<div className='relative rounded-full shadow-sm'>
+			{/* <p className='text-right text-day text-xs absolute -mt-6 right-4 '>YGG available: {balance}</p> */}
+			<div className='absolute inset-y-0 left-0 pl-3 flex items-center space-x-1 pointer-events-none'>
+				<img src='/ygg-logo.png' alt='YGG Logo' className='w-5' />
+				<span className='text-day text-sm'>YGG</span>
+			</div>
+			<input
+				type='number'
+				value={value}
+				max={balance}
+				min={0}
+				onChange={(ev) => {
+					setValue(ev.target.value)
+					tokenAmount(ev.target.value)
+				}}
+				className='bg-transparent  text-day placeholder-day placeholder-opacity-50 focus:ring-day focus:border-day block w-full pl-20 pr-12 sm:text-sm border-day rounded-full'
+				placeholder='0.00'
+				aria-describedby='price-currency'
+			/>
+			<div className='absolute inset-y-0 right-0 pr-3 flex items-center'>
+				<button onClick={handleMaxClick} className='text-day sm:text-sm'>
+					max
+				</button>
+			</div>
+		</div>
+	)
+}
+
+function UserStats({ account, raffleContract }) {
+	const tokenContract = new ethers.Contract(token.address, tokenABI)
+	function useUserStats() {
+		const calls = account
+			? [
+					{ contract: tokenContract, method: 'balanceOf', args: [account] },
+					{ contract: raffleContract, method: 'view_raw_balance', args: [account] },
+					{ contract: raffleContract, method: 'view_odds_of_winning', args: [account] },
+			  ]
+			: []
+		const results = useCalls(calls) ?? []
+		results.forEach((result, idx) => {
+			if (result && result.error) {
+				console.error(`Error: ${result.error.message}`)
+			}
+		})
+		return results.map((result) => result?.value?.[0]) || [0, 0, 0]
+	}
+	const [tokenBalance, totalStaked, odds] = useUserStats()
 
 	return (
 		<div className={`flex-col space-y-2`}>
 			<p className='text-day flex justify-between'>
-				YGG Available: <NumberFormat value={(tokenBalance && formatUnits(tokenBalance[0], 0)) || 0} displayType={'text'} thousandSeparator={true} />
+				YGG Available: <NumberFormat value={(tokenBalance && formatUnits(tokenBalance, 0)) || 0} displayType={'text'} thousandSeparator={true} />
 			</p>
 			<p className='text-day flex justify-between'>
-				Total YGG staked: <NumberFormat value={(totalStaked && formatUnits(totalStaked[0], 0)) || 0} displayType={'text'} thousandSeparator={true} />
+				Total YGG staked: <NumberFormat value={(totalStaked && formatUnits(totalStaked, 0)) || 0} displayType={'text'} thousandSeparator={true} />
 			</p>
 			<p className='text-day flex justify-between'>
 				Odds of winning:
 				<span>
-					{`${odds >= 1 ? '1 in' : ''}`} <NumberFormat value={(odds && formatUnits(odds[0], 0)) || 0} displayType={'text'} thousandSeparator={true} />
+					{`${odds >= 1 ? '1 in' : ''}`} <NumberFormat value={(odds && formatUnits(odds, 0)) || 0} displayType={'text'} thousandSeparator={true} />
 				</span>
 			</p>
 		</div>
