@@ -8,15 +8,19 @@ import NumberFormat from 'react-number-format'
 import moment from 'moment'
 import { useCalls, useContractFunction, useEthers, useTokenBalance } from '@usedapp/core'
 
-const raffleABI = new ethers.utils.Interface(raffle.abi)
-const tokenABI = new ethers.utils.Interface(token.abi)
-
 export default function Vault() {
 	const { account, library } = useEthers()
 	const [tokenAmount, setTokenAmount] = useState(0)
 	const [countdownTargetDate, setCountdownTargetDate] = useState(1)
 
-	const raffleContract = new ethers.Contract(raffle.address, raffleABI, library)
+	const ABIs = {
+		token: new ethers.utils.Interface(token.abi),
+		raffle: new ethers.utils.Interface(raffle.abi),
+	}
+	const contracts = {
+		token: new ethers.Contract(token.address, ABIs.token, library?.getSigner()),
+		raffle: new ethers.Contract(raffle.address, ABIs.raffle, library?.getSigner()),
+	}
 
 	const balance = useTokenBalance() || 0
 
@@ -24,9 +28,9 @@ export default function Vault() {
 		getCountdownTargetDate()
 	})
 
-	const approve = useContractFunction(new ethers.Contract(token.address, tokenABI, new ethers.providers.Web3Provider(window.ethereum).getSigner()), 'approve', { transactionName: 'Approve' })
+	const approve = useContractFunction(new ethers.Contract(token.address, ABIs.token, new ethers.providers.Web3Provider(window.ethereum).getSigner()), 'approve', { transactionName: 'Approve' })
 
-	const deposit = useContractFunction(new ethers.Contract(raffle.address, raffleABI, new ethers.providers.Web3Provider(window.ethereum).getSigner()), 'Deposit', { transactionName: 'Deposit' })
+	const deposit = useContractFunction(new ethers.Contract(raffle.address, ABIs.raffle, new ethers.providers.Web3Provider(window.ethereum).getSigner()), 'Deposit', { transactionName: 'Deposit' })
 
 	const handleApprove = () => {
 		approve.send(raffle.address, parseFloat(tokenAmount) + 1)
@@ -38,7 +42,7 @@ export default function Vault() {
 	const getCountdownTargetDate = async () => {
 		if (library) {
 			setCountdownTargetDate(
-				await raffleContract.queryFilter('raffleCompleted').then((raffles) => {
+				await contracts?.raffle.queryFilter('raffleCompleted').then((raffles) => {
 					return +moment
 						.unix(
 							raffles
@@ -108,7 +112,7 @@ export default function Vault() {
 					</button>
 				</div>
 			</div>
-			<UserStats account={account} raffleContract={raffleContract} />
+			<UserStats account={account} contract={contracts} />
 		</div>
 	)
 }
@@ -150,20 +154,20 @@ function Input({ balance, tokenAmount }) {
 	)
 }
 
-function UserStats({ account, raffleContract }) {
-	const tokenContract = new ethers.Contract(token.address, tokenABI)
+function UserStats({ account, contracts }) {
 	function useUserStats() {
-		const calls = account
-			? [
-					{ contract: tokenContract, method: 'balanceOf', args: [account] },
-					{ contract: raffleContract, method: 'view_raw_balance', args: [account] },
-					{ contract: raffleContract, method: 'view_odds_of_winning', args: [account] },
-			  ]
-			: []
+		const calls =
+			account && contracts
+				? [
+						{ contract: contracts.token, method: 'balanceOf', args: [account] },
+						{ contract: contracts.raffle, method: 'view_raw_balance', args: [account] },
+						{ contract: contracts.raffle, method: 'view_odds_of_winning', args: [account] },
+				  ]
+				: []
 		const results = useCalls(calls) ?? []
 		results.forEach((result, idx) => {
 			if (result && result.error) {
-				console.error(`Error: ${result.error.message}`)
+				console.error(`Error Reading Contract: ${result.error.message}`)
 			}
 		})
 		return results.map((result) => result?.value?.[0]) || [0, 0, 0]
